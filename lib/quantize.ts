@@ -7,11 +7,12 @@ import { ARTKAL_PALETTE, ARTKAL_SOLID_PALETTE, type ArtkalColor } from './artkal
 
 export interface QuantizeConfig {
   width: number;
-  height: number;
+height: number;
   maxColors: number;
   dithering: boolean;
   colorMode: 'color' | 'grayscale' | 'bw';
   useFullPalette: boolean;
+  palette?: ArtkalColor[];
 }
 
 export interface QuantizeResult {
@@ -147,8 +148,8 @@ export async function quantizeImage(
     pixels = toBW(pixels);
   }
 
-  // 3. 确定色板
-  const basePalette = useFullPalette ? ARTKAL_PALETTE : ARTKAL_SOLID_PALETTE;
+  // 3. 确定色板（优先使用外部传入的色板）
+  const basePalette = config.palette || (useFullPalette ? ARTKAL_PALETTE : ARTKAL_SOLID_PALETTE);
   const effectiveMaxColors = maxColors > 0 ? Math.min(maxColors, basePalette.length) : basePalette.length;
 
   // 4. 用 image-q 提取主色调
