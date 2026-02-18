@@ -20,7 +20,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { password, count = 10 } = body;
 
-if (password !== process.env.ADMIN_PASSWORD) {
+    // 同时支持 body 和 header 传密码（向后兼容）
+    const adminPassword = password || req.headers.get('x-admin-password');
+    if (adminPassword !== process.env.ADMIN_PASSWORD) {
    return NextResponse.json({ error: '密码错误' }, { status: 401 });
     }
 

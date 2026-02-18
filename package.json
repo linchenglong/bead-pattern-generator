@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@netlify/plugin-nextjs": "^5.15.8",
     "@upstash/redis": "^1.36.2",
     "image-q": "^4.0.0",
     "jose": "^6.1.3",
