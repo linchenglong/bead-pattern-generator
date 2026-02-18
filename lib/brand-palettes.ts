@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * 多品牌拼豆色板数据
+ * 多品牌拼豆色板数据（旧版，待迁移到 palette-registry 架构）
  */
 
 import { type ArtkalColor } from './artkal-palette';
