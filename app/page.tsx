@@ -31,48 +31,43 @@ export default function Home() {
     const ratio = img.naturalWidth / img.naturalHeight;
     setImageAspectRatio(ratio);
 
-    // 根据图片比例自动调整尺寸
     if (ratio > 1) {
-   setConfig((prev) => ({
+      setConfig((prev) => ({
         ...prev,
         height: Math.max(1, Math.round(prev.width / ratio)),
       }));
     } else {
-      setConfig((prev) => ({
-  ...prev,
-        width: Math.max(1, Math.round(prev.height * ratio)),
+setConfig((prev) => ({
+        ...prev,
+ width: Math.max(1, Math.round(prev.height * ratio)),
       }));
     }
-    // 清除之前的结果
- setResult(null);
+    setResult(null);
   }, []);
 
   const handleGenerate = useCallback(async () => {
     if (!imageRef.current) {
-  alert('请先上传图片');
+      alert('请先上传图片');
       return;
     }
 
-    // 检查使用权限
-  const token = localStorage.getItem('bead_token');
+    const token = localStorage.getItem('bead_token');
     try {
       const checkRes = await fetch('/api/check-usage', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+  headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),
-      });
+   });
       const checkData = await checkRes.json();
 
       if (!checkData.allowed) {
-        setShowRedeem(true);
+     setShowRedeem(true);
         return;
-      }
+   }
     } catch {
-      // API 出错时放行（容错）
-    console.warn('Usage check failed, allowing...');
-  }
+      console.warn('Usage check failed, allowing...');
+    }
 
-    // 执行量化
     setLoading(true);
     try {
       const quantizeResult = await quantizeImage(imageRef.current, config);
@@ -80,7 +75,7 @@ export default function Home() {
     } catch (err) {
       console.error('Quantize error:', err);
       alert('图片处理失败，请重试');
-    } finally {
+ } finally {
       setLoading(false);
     }
   }, [config]);
@@ -92,58 +87,104 @@ export default function Home() {
   }, [handleGenerate]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
-      {/* Header */}
-      <header className="text-center py-8 px-4">
-        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
- 🫘 拼豆图纸生成器
-        </h1>
-        <p className="text-gray-500 mt-2 text-sm md:text-base">
-上传照片，一键生成 Artkal 拼豆图纸
-   </p>
+    <main className="min-h-screen">
+      <header className="text-center py-10 px-4 animate-fade-in-up">
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <div className="flex gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-terracotta opacity-60" />
+         <span className="w-2 h-2 rounded-full bg-sage opacity-40" />
+      <span className="w-1.5 h-1.5 rounded-full bg-warm-300 opacity-50" />
+      </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-charcoal tracking-tight">
+         拼豆图纸生成器
+    </h1>
+  <div className="flex gap-1.5">
+         <span className="w-1.5 h-1.5 rounded-full bg-warm-300 opacity-50" />
+ <span className="w-2 h-2 rounded-full bg-sage opacity-40" />
+            <span className="w-2 h-2 rounded-full bg-terracotta opacity-60" />
+          </div>
+        </div>
+        <p className="text-warm-400 text-sm md:text-base">
+ 上传照片，一键生成 Artkal 拼豆图纸
+     </p>
       </header>
 
- <div className="max-w-6xl mx-auto px-4 pb-16">
+      <div className="max-w-6xl mx-auto px-4 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-     {/* 左栏：上传 + 配置 */}
-          <div className="space-y-6">
-            <ImageUploader onImageLoad={handleImageLoad} />
-        <ConfigPanel
-          config={config}
-              onChange={setConfig}
-         imageAspectRatio={imageAspectRatio}
-  disabled={loading}
-  />
+   <div className="space-y-6">
+          <div className="animate-fade-in-up stagger-1">
+     <div className="flex items-center gap-2 mb-3">
+       <div className="section-number">01</div>
+     <span className="text-sm font-semibold text-charcoal">上传图片</span>
+              </div>
+              <ImageUploader onImageLoad={handleImageLoad} />
+     </div>
 
-     {/* 生成按钮 */}
-        <button
-              onClick={handleGenerate}
-    disabled={loading || !imageRef.current}
-  className="w-full py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-lg font-bold rounded-2xl hover:from-pink-600 hover:to-rose-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
-            >
-  {loading ? '⏳ 生成中...' : '✨ 生成拼豆图纸'}
-         </button>
+<div className="animate-fade-in-up stagger-2">
+              <div className="flex items-center gap-2 mb-3">
+    <div className="section-number">02</div>
+        <span className="text-sm font-semibold text-charcoal">参数配置</span>
        </div>
+  <ConfigPanel
+       config={config}
+        onChange={setConfig}
+      imageAspectRatio={imageAspectRatio}
+       disabled={loading}
+       />
+   </div>
 
-      {/* 右栏：预览 + 用料 + 下载 */}
-     <div className="space-y-6">
-            <BeadPreview result={result} loading={loading} />
-            <MaterialList result={result} />
- <DownloadButton result={result} />
- </div>
+            <div className="animate-fade-in-up stagger-3">
+         <div className="flex items-center gap-2 mb-3">
+ <div className="section-number">03</div>
+          <span className="text-sm font-semibold text-charcoal">生成图纸</span>
+              </div>
+   <button
+  onClick={handleGenerate}
+       disabled={loading || !imageRef.current}
+          className="btn-primary w-full py-4 text-lg"
+        >
+     {loading ? (
+            <span className="flex items-center justify-center gap-3">
+  <span className="bead-loader">
+         <span /><span /><span /><span /><span />
+         </span>
+   生成中...
+ </span>
+        ) : (
+       '生成拼豆图纸'
+       )}
+      </button>
+            </div>
+   </div>
+
+        <div className="space-y-6">
+     <div className="animate-fade-in-up stagger-2">
+            <div className="flex items-center gap-2 mb-3">
+      <div className="section-number">04</div>
+    <span className="text-sm font-semibold text-charcoal">预览效果</span>
+              </div>
+              <div className="min-h-[260px] flex flex-col">
+    <BeadPreview result={result} loading={loading} />
+              </div>
+            </div>
+            <div className="animate-fade-in-up stagger-3">
+        <MaterialList result={result} />
+    </div>
+            <div className="animate-fade-in-up stagger-4">
+   <DownloadButton result={result} />
+            </div>
         </div>
+     </div>
       </div>
 
-  {/* 兑换码弹窗 */}
-   <RedeemDialog
+      <RedeemDialog
         open={showRedeem}
-        onClose={() => setShowRedeem(false)}
-        onSuccess={handleRedeemSuccess}
-    />
+     onClose={() => setShowRedeem(false)}
+   onSuccess={handleRedeemSuccess}
+      />
 
-      {/* Footer */}
-      <footer className="text-center py-6 text-xs text-gray-400 border-t border-gray-100">
-        <p>拼豆图纸生成器 — 让每颗豆子都到位 ❤️</p>
+    <footer className="text-center py-6 text-xs text-warm-400 border-t border-warm-border">
+        <p>拼豆图纸生成器 — 让每颗豆子都到位</p>
         <p className="mt-1">Artkal 色板仅供参考，实际颜色以实物为准</p>
       </footer>
     </main>
