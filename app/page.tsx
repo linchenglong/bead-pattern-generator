@@ -10,12 +10,14 @@ import DownloadButton from '@/components/DownloadButton';
 import { quantizeImage, type QuantizeResult } from '@/lib/quantize';
 
 const DEFAULT_CONFIG: BeadConfig = {
-  width: 29,
-  height: 29,
+  width: 50,
+  height: 50,
   maxColors: 16,
   dithering: false,
   colorMode: 'color',
   useFullPalette: false,
+  isCustomSize: false,
+  selectedBrands: ['artkal'],
 };
 
 export default function Home() {

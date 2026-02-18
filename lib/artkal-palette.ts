@@ -1,36 +1,20 @@
 /**
  * Artkal C 系列 (5mm 硬豆) 色板数据
- * 颜色 RGB 值整理自 Artkal 官方色卡及社区资源
+ * 已适配统一 BeadColor 接口，导入时自动注册到全局色板
  */
+import { type BeadColor, makeBeadColor, registerPalette } from './palette-registry';
 
-export interface ArtkalColor {
-  code: string;   // 色号，如 "C01"
-name: string;   // 颜色名称
-  hex: string;  // HEX 色值
-  r: number;
-  g: number;
-  b: number;
-}
+/** 向后兼容：ArtkalColor 作为 BeadColor 别名 */
+export type ArtkalColor = BeadColor;
 
-function hex2rgb(hex: string): { r: number; g: number; b: number } {
-  const h = hex.replace('#', '');
-  return {
-  r: parseInt(h.substring(0, 2), 16),
-    g: parseInt(h.substring(2, 4), 16),
-    b: parseInt(h.substring(4, 6), 16),
-  };
-}
-
-function c(code: string, name: string, hex: string): ArtkalColor {
-  const { r, g, b } = hex2rgb(hex);
-  return { code, name, hex, r, g, b };
+function c(code: string, name: string, hex: string, special = false): BeadColor {
+  return makeBeadColor('artkal', code, name, hex, special);
 }
 
 /**
  * Artkal C 系列完整色板 - 159 色
- * 按色系分组排列
  */
-export const ARTKAL_PALETTE: ArtkalColor[] = [
+export const ARTKAL_PALETTE: BeadColor[] = [
   // ===== 白/灰/黑系 =====
   c('C01', '白色', '#FFFFFF'),
   c('C02', '奶白', '#F5F0E6'),
@@ -68,7 +52,7 @@ export const ARTKAL_PALETTE: ArtkalColor[] = [
 
   // ===== 橙色系 =====
   c('C30', '橙色', '#F08020'),
-  c('C31', '深橙', '#D06020'),
+c('C31', '深橙', '#D06020'),
   c('C32', '浅橙', '#F8A858'),
   c('C33', '柿橙', '#E87040'),
   c('C34', '杏橙', '#F0A070'),
@@ -92,7 +76,7 @@ export const ARTKAL_PALETTE: ArtkalColor[] = [
 
   // ===== 绿色系 =====
   c('C50', '草绿', '#40B040'),
-c('C51', '翠绿', '#20A030'),
+  c('C51', '翠绿', '#20A030'),
   c('C52', '深绿', '#187028'),
   c('C53', '墨绿', '#105020'),
   c('C54', '浅绿', '#80D080'),
@@ -115,7 +99,7 @@ c('C51', '翠绿', '#20A030'),
   c('C69', '深青', '#008898'),
   c('C70', '浅青', '#70D8E0'),
   c('C71', '湖蓝', '#30A8D0'),
-c('C72', '天蓝', '#50B8E8'),
+  c('C72', '天蓝', '#50B8E8'),
   c('C73', '水鸭蓝', '#208088'),
 
   // ===== 蓝色系 =====
@@ -147,15 +131,15 @@ c('C72', '天蓝', '#50B8E8'),
   c('C97', '丁香紫', '#A870C0'),
   c('C98', '梅紫', '#882888'),
   c('C99', '暗紫', '#402060'),
-c('C100', '藕紫', '#C8A0C0'),
+  c('C100', '藕紫', '#C8A0C0'),
   c('C101', '兰紫', '#6050B0'),
 
   // ===== 棕/褐色系 =====
-c('C102', '浅棕', '#C8A078'),
+  c('C102', '浅棕', '#C8A078'),
   c('C103', '棕色', '#987050'),
   c('C104', '深棕', '#604030'),
   c('C105', '巧克力棕', '#503020'),
-c('C106', '咖啡棕', '#6B4030'),
+  c('C106', '咖啡棕', '#6B4030'),
   c('C107', '红棕', '#885038'),
   c('C108', '黄棕', '#A08040'),
   c('C109', '驼棕', '#B09068'),
@@ -181,31 +165,31 @@ c('C106', '咖啡棕', '#6B4030'),
   c('C125', '香槟色', '#E8D8B8'),
 
   // ===== 金/银/金属色 =====
-  c('C126', '金色', '#D8B040'),
+c('C126', '金色', '#D8B040'),
   c('C127', '银色', '#C0C0C0'),
   c('C128', '古铜金', '#B89040'),
   c('C129', '玫瑰金', '#C89080'),
 
   // ===== 荧光色 =====
-  c('C130', '荧光粉', '#FF70B0'),
-  c('C131', '荧光橙', '#FF8020'),
-  c('C132', '荧光黄', '#E8F020'),
-  c('C133', '荧光绿', '#40FF40'),
-  c('C134', '荧光蓝', '#20B0FF'),
+  c('C130', '荧光粉', '#FF70B0', true),
+  c('C131', '荧光橙', '#FF8020', true),
+  c('C132', '荧光黄', '#E8F020', true),
+  c('C133', '荧光绿', '#40FF40', true),
+  c('C134', '荧光蓝', '#20B0FF', true),
 
   // ===== 半透明/果冻色 =====
-  c('C135', '透明', '#F0F0F0'),
-  c('C136', '透明红', '#F08080'),
-  c('C137', '透明橙', '#F0B070'),
-  c('C138', '透明黄', '#F0E080'),
-  c('C139', '透明绿', '#80E080'),
-  c('C140', '透明蓝', '#80C0F0'),
-  c('C141', '透明紫', '#C090E0'),
+  c('C135', '透明', '#F0F0F0', true),
+  c('C136', '透明红', '#F08080', true),
+  c('C137', '透明橙', '#F0B070', true),
+  c('C138', '透明黄', '#F0E080', true),
+  c('C139', '透明绿', '#80E080', true),
+  c('C140', '透明蓝', '#80C0F0', true),
+  c('C141', '透明紫', '#C090E0', true),
 
   // ===== 夜光色 =====
-  c('C142', '夜光白', '#E8F8E0'),
-  c('C143', '夜光绿', '#C0F0B0'),
-  c('C144', '夜光蓝', '#B0E0F0'),
+  c('C142', '夜光白', '#E8F8E0', true),
+  c('C143', '夜光绿', '#C0F0B0', true),
+  c('C144', '夜光蓝', '#B0E0F0', true),
 
   // ===== 扩展色 =====
   c('C145', '烟灰', '#989090'),
@@ -225,15 +209,13 @@ c('C106', '咖啡棕', '#6B4030'),
   c('C159', '灰棕', '#908070'),
 ];
 
-/** 快速查找: code → ArtkalColor */
-export const ARTKAL_MAP = new Map<string, ArtkalColor>(
+// === 自动注册 ===
+registerPalette('artkal', ARTKAL_PALETTE);
+
+/** 快速查找: code → BeadColor */
+export const ARTKAL_MAP = new Map<string, BeadColor>(
   ARTKAL_PALETTE.map((c) => [c.code, c])
 );
 
-/** 仅提取不透明实色（排除透明/夜光等特殊系列，量化时更精准） */
-export const ARTKAL_SOLID_PALETTE = ARTKAL_PALETTE.filter(
-  (c) =>
-    !c.name.includes('透明') &&
-    !c.name.includes('夜光') &&
-    !c.name.includes('荧光')
-);
+/** 仅提取不透明实色 */
+export const ARTKAL_SOLID_PALETTE = ARTKAL_PALETTE.filter((c) => !c.special);

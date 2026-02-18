@@ -1,9 +1,11 @@
 /**
  * 图像量化核心模块
  * Canvas 缩放 → 像素提取 → image-q CIEDE2000 量化 → 输出量化矩阵
+ * 已适配多品牌色板
  */
 import * as iq from 'image-q';
-import { ARTKAL_PALETTE, ARTKAL_SOLID_PALETTE, type ArtkalColor } from './artkal-palette';
+import type { BeadColor, BrandId } from './palette-registry';
+import { getMergedPalette } from './palettes';
 
 export interface QuantizeConfig {
   width: number;
@@ -12,12 +14,13 @@ export interface QuantizeConfig {
   dithering: boolean;
   colorMode: 'color' | 'grayscale' | 'bw';
   useFullPalette: boolean;
+  selectedBrands: BrandId[];
 }
 
 export interface QuantizeResult {
-matrix: ArtkalColor[][];
-  colorStats: Map<string, number>;
-  usedColors: ArtkalColor[];
+  matrix: BeadColor[][];
+  colorStats: Map<string, number>; // key = uid ("artkal:C01")
+  usedColors: BeadColor[];
   totalBeads: number;
   width: number;
   height: number;
@@ -36,10 +39,10 @@ function resizeAndExtract(
   canvas.height = targetH;
   const ctx = canvas.getContext('2d')!;
   ctx.imageSmoothingEnabled = true;
-ctx.imageSmoothingQuality = 'high';
+  ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(img, 0, 0, targetW, targetH);
   const imageData = ctx.getImageData(0, 0, targetW, targetH);
-return new Uint8Array(imageData.data.buffer);
+  return new Uint8Array(imageData.data.buffer);
 }
 
 /**
@@ -50,7 +53,7 @@ function toGrayscale(pixels: Uint8Array): Uint8Array {
   for (let i = 0; i < pixels.length; i += 4) {
     const gray = Math.round(0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2]);
     result[i] = gray;
-  result[i + 1] = gray;
+    result[i + 1] = gray;
     result[i + 2] = gray;
     result[i + 3] = pixels[i + 3];
   }
@@ -63,12 +66,12 @@ function toGrayscale(pixels: Uint8Array): Uint8Array {
 function toBW(pixels: Uint8Array): Uint8Array {
   const result = new Uint8Array(pixels.length);
   for (let i = 0; i < pixels.length; i += 4) {
-    const gray = 0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2];
-const bw = gray > 128 ? 255 : 0;
+  const gray = 0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2];
+    const bw = gray > 128 ? 255 : 0;
     result[i] = bw;
-result[i + 1] = bw;
+    result[i + 1] = bw;
     result[i + 2] = bw;
-    result[i + 3] = pixels[i + 3];
+  result[i + 3] = pixels[i + 3];
   }
   return result;
 }
@@ -79,7 +82,7 @@ result[i + 1] = bw;
 function rgb2lab(r: number, g: number, b: number): [number, number, number] {
   let rl = r / 255, gl = g / 255, bl = b / 255;
   rl = rl > 0.04045 ? Math.pow((rl + 0.055) / 1.055, 2.4) : rl / 12.92;
-gl = gl > 0.04045 ? Math.pow((gl + 0.055) / 1.055, 2.4) : gl / 12.92;
+  gl = gl > 0.04045 ? Math.pow((gl + 0.055) / 1.055, 2.4) : gl / 12.92;
   bl = bl > 0.04045 ? Math.pow((bl + 0.055) / 1.055, 2.4) : bl / 12.92;
 
   let x = (rl * 0.4124564 + gl * 0.3575761 + bl * 0.1804375) / 0.95047;
@@ -99,43 +102,42 @@ function labDistance(
   L1: number, a1: number, b1: number,
   L2: number, a2: number, b2: number
 ): number {
-  const dL = L1 - L2;
+const dL = L1 - L2;
   const da = a1 - a2;
   const db = b1 - b2;
   return Math.sqrt(dL * dL + da * da + db * db);
 }
 
 /**
- * 在 Artkal 色板中找到最近的颜色
+ * 在色板中找到最近的颜色
  */
-function findNearestArtkal(
+function findNearestColor(
   r: number, g: number, b: number,
-  palette: ArtkalColor[]
-): ArtkalColor {
+  palette: BeadColor[]
+): BeadColor {
   const [L, a, bv] = rgb2lab(r, g, b);
-  let best: ArtkalColor = palette[0];
+  let best: BeadColor = palette[0];
   let bestDist = Infinity;
 
   for (const color of palette) {
- const [L2, a2, b2] = rgb2lab(color.r, color.g, color.b);
+    const [L2, a2, b2] = rgb2lab(color.r, color.g, color.b);
     const dist = labDistance(L, a, bv, L2, a2, b2);
     if (dist < bestDist) {
       bestDist = dist;
       best = color;
-  }
+    }
   }
   return best;
 }
 
 /**
  * 主量化流程
- * 使用 image-q 的 buildPaletteSync + applyPaletteSync 高级 API
  */
 export async function quantizeImage(
   img: HTMLImageElement,
   config: QuantizeConfig
 ): Promise<QuantizeResult> {
-  const { width, height, maxColors, dithering, colorMode, useFullPalette } = config;
+  const { width, height, maxColors, dithering, colorMode, useFullPalette, selectedBrands } = config;
 
   // 1. 缩放并提取像素
   let pixels = resizeAndExtract(img, width, height);
@@ -147,69 +149,68 @@ export async function quantizeImage(
     pixels = toBW(pixels);
   }
 
-  // 3. 确定色板
-  const basePalette = useFullPalette ? ARTKAL_PALETTE : ARTKAL_SOLID_PALETTE;
+  // 3. 确定色板 — 使用多品牌合并色板
+  const basePalette = getMergedPalette(selectedBrands, !useFullPalette);
   const effectiveMaxColors = maxColors > 0 ? Math.min(maxColors, basePalette.length) : basePalette.length;
 
   // 4. 用 image-q 提取主色调
   const pointContainer = iq.utils.PointContainer.fromUint8Array(pixels, width, height);
 
-  // 建立减色色板 — 先用 image-q 找出 effectiveMaxColors 种代表色
   const internalPalette = iq.buildPaletteSync([pointContainer], {
     colorDistanceFormula: 'ciede2000',
     paletteQuantization: 'rgbquant',
     colors: effectiveMaxColors,
   });
 
-  // 5. 将 image-q 色板映射到 Artkal 色板
+  // 5. 将 image-q 色板映射到合并色板
   const internalPoints = internalPalette.getPointContainer().getPointArray();
-  const usedArtkalSet = new Map<string, ArtkalColor>();
+  const usedColorSet = new Map<string, BeadColor>();
 
   for (const pt of internalPoints) {
-    const nearest = findNearestArtkal(pt.r, pt.g, pt.b, basePalette);
-    if (!usedArtkalSet.has(nearest.code)) {
-      usedArtkalSet.set(nearest.code, nearest);
+    const nearest = findNearestColor(pt.r, pt.g, pt.b, basePalette);
+    if (!usedColorSet.has(nearest.uid)) {
+      usedColorSet.set(nearest.uid, nearest);
     }
   }
-  const targetPalette = Array.from(usedArtkalSet.values());
+  const targetPalette = Array.from(usedColorSet.values());
 
-// 6. 构建 Artkal 色板用于最终量化
-  const artkalPaletteObj = new iq.utils.Palette();
+  // 6. 构建色板用于最终量化
+  const quantPaletteObj = new iq.utils.Palette();
   for (const color of targetPalette) {
     const pt = iq.utils.Point.createByRGBA(color.r, color.g, color.b, 255);
-  artkalPaletteObj.add(pt);
+    quantPaletteObj.add(pt);
   }
 
   // 7. 应用色板到图像
-  const resultContainer = iq.applyPaletteSync(pointContainer, artkalPaletteObj, {
+  const resultContainer = iq.applyPaletteSync(pointContainer, quantPaletteObj, {
     colorDistanceFormula: 'ciede2000',
     imageQuantization: dithering ? 'floyd-steinberg' : 'nearest',
-});
+  });
 
-  // 8. 映射结果回 Artkal 颜色矩阵
+  // 8. 映射结果回颜色矩阵 — key 用 uid
   const resultPoints = resultContainer.getPointArray();
-  const matrix: ArtkalColor[][] = [];
+  const matrix: BeadColor[][] = [];
   const colorStats = new Map<string, number>();
 
   for (let y = 0; y < height; y++) {
-    const row: ArtkalColor[] = [];
+    const row: BeadColor[] = [];
     for (let x = 0; x < width; x++) {
-   const idx = y * width + x;
+      const idx = y * width + x;
       const pt = resultPoints[idx];
-      const artkalColor = findNearestArtkal(pt.r, pt.g, pt.b, targetPalette);
-      row.push(artkalColor);
-      colorStats.set(artkalColor.code, (colorStats.get(artkalColor.code) || 0) + 1);
-    }
+  const beadColor = findNearestColor(pt.r, pt.g, pt.b, targetPalette);
+      row.push(beadColor);
+      colorStats.set(beadColor.uid, (colorStats.get(beadColor.uid) || 0) + 1);
+ }
     matrix.push(row);
   }
 
   // 9. 统计
-  const usedColors = targetPalette.filter((c) => colorStats.has(c.code));
-  usedColors.sort((a, b) => (colorStats.get(b.code) || 0) - (colorStats.get(a.code) || 0));
+  const usedColors = targetPalette.filter((c) => colorStats.has(c.uid));
+  usedColors.sort((a, b) => (colorStats.get(b.uid) || 0) - (colorStats.get(a.uid) || 0));
 
   return {
     matrix,
-    colorStats,
+colorStats,
     usedColors,
     totalBeads: width * height,
     width,
