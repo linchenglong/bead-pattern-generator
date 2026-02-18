@@ -6,6 +6,8 @@ interface ImageUploaderProps {
   onImageLoad: (img: HTMLImageElement, file: File) => void;
 }
 
+const BEAD_COLORS = ['#BF5540', '#5A8A63', '#D1C9BF', '#E8A849', '#6B8F9E'];
+
 export default function ImageUploader({ onImageLoad }: ImageUploaderProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -16,23 +18,23 @@ export default function ImageUploader({ onImageLoad }: ImageUploaderProps) {
       if (!file.type.startsWith('image/')) {
         alert('请上传图片文件');
         return;
-      }
+   }
       const url = URL.createObjectURL(file);
       setPreview(url);
 
-      const img = new Image();
+   const img = new Image();
       img.onload = () => onImageLoad(img, file);
       img.src = url;
     },
-  [onImageLoad]
+    [onImageLoad]
   );
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
-   setDragActive(false);
+      setDragActive(false);
       if (e.dataTransfer.files[0]) {
-        handleFile(e.dataTransfer.files[0]);
+    handleFile(e.dataTransfer.files[0]);
       }
     },
     [handleFile]
@@ -41,49 +43,66 @@ export default function ImageUploader({ onImageLoad }: ImageUploaderProps) {
   return (
     <div className="w-full">
       <div
-        className={`relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
-       dragActive
-      ? 'border-pink-400 bg-pink-50'
-        : 'border-gray-300 hover:border-pink-300 hover:bg-pink-50/30'
-        }`}
+        className={`upload-zone p-6 text-center min-h-[260px] flex flex-col items-center justify-center ${
+ dragActive ? 'drag-active' : ''
+        } ${preview ? 'has-image' : ''}`}
         onDragOver={(e) => {
-          e.preventDefault();
+      e.preventDefault();
        setDragActive(true);
-        }}
-   onDragLeave={() => setDragActive(false)}
-        onDrop={handleDrop}
+      }}
+        onDragLeave={() => setDragActive(false)}
+     onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
       >
-     <input
-        ref={inputRef}
-          type="file"
+        <input
+       ref={inputRef}
+  type="file"
           accept="image/*"
           className="hidden"
-   onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+          onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
         />
 
-        {preview ? (
-          <div className="space-y-4">
- <img
-       src={preview}
-      alt="预览"
-              className="max-h-64 mx-auto rounded-lg shadow-md"
-            />
-            <p className="text-sm text-gray-500">点击或拖拽更换图片</p>
-</div>
-        ) : (
-          <div className="space-y-4 py-8">
-            <div className="text-5xl">📷</div>
-            <div>
-        <p className="text-lg font-medium text-gray-700">
-          点击上传或拖拽图片到这里
-            </p>
-       <p className="text-sm text-gray-400 mt-1">
-                支持 JPG、PNG、WebP 格式
-      </p>
+        <div className="relative z-10">
+          {preview ? (
+         <div className="space-y-3">
+              <img
+                src={preview}
+              alt="预览"
+  className="max-h-56 mx-auto rounded-xl"
+     style={{ boxShadow: '0 4px 20px rgba(42,39,36,0.1)' }}
+   />
+      <p className="text-warm-400 text-xs">点击或拖拽更换图片</p>
+       </div>
+  ) : (
+<div className="space-y-3 py-6">
+        {/* Decorative pegboard mini grid */}
+      <div className="flex justify-center gap-1.5 mb-2">
+     {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex flex-col gap-1.5">
+   {[...Array(3)].map((_, j) => (
+          <div
+ key={j}
+         className="w-2.5 h-2.5 rounded-full"
+          style={{
+        backgroundColor: BEAD_COLORS[(i + j) % BEAD_COLORS.length],
+       opacity: 0.35 + ((i * 3 + j) % 5) * 0.12,
+         }}
+ />
+     ))}
       </div>
-          </div>
-        )}
+       ))}
+</div>
+           <div>
+         <p className="text-sm font-medium text-charcoal">
+               点击上传或拖拽图片到这里
+    </p>
+   <p className="text-xs text-warm-400 mt-1">
+     支持 JPG、PNG、WebP 格式
+      </p>
+  </div>
+</div>
+          )}
+        </div>
       </div>
     </div>
   );
