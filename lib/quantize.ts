@@ -14,7 +14,7 @@ export interface QuantizeConfig {
   dithering: boolean;
   colorMode: 'color' | 'grayscale' | 'bw';
   useFullPalette: boolean;
-  selectedBrands: BrandId[];
+  selectedBrand: BrandId;
 }
 
 export interface QuantizeResult {
@@ -137,7 +137,7 @@ export async function quantizeImage(
   img: HTMLImageElement,
   config: QuantizeConfig
 ): Promise<QuantizeResult> {
-  const { width, height, maxColors, dithering, colorMode, useFullPalette, selectedBrands } = config;
+  const { width, height, maxColors, dithering, colorMode, useFullPalette, selectedBrand } = config;
 
   // 1. 缩放并提取像素
   let pixels = resizeAndExtract(img, width, height);
@@ -150,7 +150,7 @@ export async function quantizeImage(
   }
 
   // 3. 确定色板 — 使用多品牌合并色板
-  const basePalette = getMergedPalette(selectedBrands, !useFullPalette);
+  const basePalette = getMergedPalette([selectedBrand], !useFullPalette);
   const effectiveMaxColors = maxColors > 0 ? Math.min(maxColors, basePalette.length) : basePalette.length;
 
   // 4. 用 image-q 提取主色调

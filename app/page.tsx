@@ -17,7 +17,7 @@ const DEFAULT_CONFIG: BeadConfig = {
   colorMode: 'color',
   useFullPalette: false,
   isCustomSize: false,
-  selectedBrands: ['artkal'],
+  selectedBrand: 'artkal' as const,
 };
 
 export default function Home() {
