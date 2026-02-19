@@ -64,7 +64,8 @@ export default function ConfigPanel({ config, onChange, imageAspectRatio, disabl
 
   const isPresetActive = (p: (typeof SIZE_PRESETS)[0]) => {
     if (p.w === 0) return config.isCustomSize;
-    return !config.isCustomSize && p.w === config.width && p.h === config.height;
+    if (config.isCustomSize) return false;
+    return p.w === config.width;
   };
 
   return (

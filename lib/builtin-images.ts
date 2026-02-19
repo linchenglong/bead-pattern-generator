@@ -38,7 +38,7 @@ const PETS: BuiltInImage[] = [
   unsplash('1552053831-71594a27632d', '可爱柯基'),
   unsplash('1583511655857-d19b40a7a54e', '哈士奇'),
   unsplash('1585110396000-c9ffd4e4b308', '白兔'),
-  unsplash('1425082661507-d09f37ccb1b5', '小仓鼠'),
+  unsplash('1548767797-d8c844163c4c', '小仓鼠'),
   unsplash('1518882174711-1de40238921b', '猫咪打哈欠'),
   unsplash('1560807707-8cc77767d783', '趴着的狗'),
   unsplash('1537151625747-768eb6cf92b2', '可爱小猫'),
@@ -81,7 +81,6 @@ const SCENERY: BuiltInImage[] = [
 ];
 
 const FLOWERS: BuiltInImage[] = [
-  unsplash('1490750967868-88aa4f44baee', '粉色玫瑰'),
   unsplash('1455659817273-f96807779a8a', '向日葵'),
   unsplash('1462275646964-a0e3c11f18a6', '薰衣草田'),
   unsplash('1487530811176-3780de880c2d', '彩色郁金香'),
@@ -91,8 +90,6 @@ const FLOWERS: BuiltInImage[] = [
   unsplash('1416879595882-3373a0480b5b', '紫色绣球'),
   unsplash('1457089328109-e5d9bd499191', '水仙花'),
   unsplash('1467545159547-1b93b24406ae', '粉色牡丹'),
-  unsplash('1471696035578-3d8c78d99c4f', '热带花卉'),
-  unsplash('1490750967868-88aa4f44baef', '春日花束'),
 ];
 
 const FOOD: BuiltInImage[] = [

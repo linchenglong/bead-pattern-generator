@@ -22,7 +22,7 @@ const fingerprint = generateFingerprint(ip, ua);
     return NextResponse.json(usage);
   } catch (error) {
     console.error('Check usage error:', error);
-    return NextResponse.json({ allowed: true, usedCount: 0, remaining: 1 });
+    return NextResponse.json({ allowed: false, usedCount: 999, remaining: 0 });
   }
 }
 
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ allowed: true, method: 'free' });
   } catch (error) {
     console.error('Consume usage error:', error);
-    // 出错时默认放行，不影响用户体验
-    return NextResponse.json({ allowed: true, method: 'fallback' });
+    // fail-closed: 出错时默认拒绝
+    return NextResponse.json({ allowed: false, error: '系统错误，请稍后重试' }, { status: 500 });
   }
 }

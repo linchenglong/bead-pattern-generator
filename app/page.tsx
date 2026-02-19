@@ -36,6 +36,7 @@ export default function Home() {
   const [showRedeem, setShowRedeem] = useState(false);
   const [imageAspectRatio, setImageAspectRatio] = useState<number | undefined>();
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const [activeTab, setActiveTab] = useState<'upload' | 'gallery'>('upload');
 
   // 当前品牌色板总色数
   const totalPaletteColors = useMemo(() => {
@@ -82,7 +83,9 @@ export default function Home() {
   return;
       }
     } catch {
-      console.warn('Usage check failed, allowing...');
+      console.warn('Usage check failed, blocking');
+      setShowRedeem(true);
+      return;
     }
 
     setLoading(true);
@@ -133,19 +136,26 @@ export default function Home() {
    <div className="animate-fade-in-up stagger-1">
      <div className="flex items-center gap-2 mb-3">
   <div className="section-number">01</div>
-      <span className="text-sm font-semibold text-charcoal">上传图片</span>
-      </div>
-              <ImageUploader onImageLoad={handleImageLoad} />
-
-    {/* 内置图片库 */}
-              <div className="mt-4">
-     <p className="text-xs font-semibold text-warm-400 uppercase tracking-wider mb-2">
-       或选择内置素材
-    </p>
-         <div className="card p-4">
-        <ImageGallery onImageLoad={handleImageLoad} disabled={loading} />
-   </div>
+      <span className="text-sm font-semibold text-charcoal">选择图片</span>
               </div>
+              {/* Tab buttons */}
+     <div className="flex gap-0">
+      <button onClick={() => setActiveTab('upload')} className={`px-4 py-2 text-sm font-medium rounded-tl-xl rounded-tr-xl border border-b-0 transition-colors ${activeTab === 'upload' ? 'bg-white text-charcoal border-warm-border' : 'bg-warm-50 text-warm-400 border-transparent hover:text-warm-500'}`}>
+           上传图片
+   </button>
+       <button onClick={() => setActiveTab('gallery')} className={`px-4 py-2 text-sm font-medium rounded-tl-xl rounded-tr-xl border border-b-0 transition-colors ${activeTab === 'gallery' ? 'bg-white text-charcoal border-warm-border' : 'bg-warm-50 text-warm-400 border-transparent hover:text-warm-500'}`}>
+         素材库
+       </button>
+       </div>
+              <div className="card rounded-tl-none p-0 overflow-hidden">
+          {activeTab === 'upload' ? (
+            <ImageUploader onImageLoad={handleImageLoad} />
+         ) : (
+    <div className="p-4">
+     <ImageGallery onImageLoad={handleImageLoad} disabled={loading} />
+              </div>
+    )}
+      </div>
     </div>
 
             <div className="animate-fade-in-up stagger-2">
