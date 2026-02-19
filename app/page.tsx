@@ -92,6 +92,8 @@ export default function Home() {
     try {
       const quantizeResult = await quantizeImage(imageRef.current, config);
       setResult(quantizeResult);
+      // 生成成功后清除 token，一个兑换码只能用一次
+      localStorage.removeItem('bead_token');
     } catch (err) {
       console.error('Quantize error:', err);
       alert('图片处理失败，请重试');
